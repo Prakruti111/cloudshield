@@ -1,0 +1,52 @@
+name: DevSecOps Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  secrets-scan:
+    name: Gitleaks (secrets)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  code-scan:
+    name: Semgrep (SAST)
+    runs-on: ubuntu-latest
+    container:
+      image: semgrep/semgrep
+    steps:
+      - uses: actions/checkout@v4
+      - run: semgrep scan --config p/default --error
+
+  dependency-scan:
+    name: Trivy (dependencies)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          docker run --rm -v ${{ github.workspace }}:/src aquasec/trivy:latest \
+            fs --scanners vuln --severity HIGH,CRITICAL --exit-code 1 /src
+
+  image-scan:
+    name: Build and Trivy (Docker image)
+    runs-on: ubuntu-latest
+    needs: [secrets-scan, code-scan, dependency-scan]
+    strategy:
+      matrix:
+        service: [user-service, web-api]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image
+        run: docker build -t cloudshield-${{ matrix.service }}:ci services/${{ matrix.service }}
+      - name: Scan image
+        run: |
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest \
+            image --severity HIGH,CRITICAL --exit-code 1 cloudshield-${{ matrix.service }}:ci
