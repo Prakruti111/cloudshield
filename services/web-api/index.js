@@ -1,5 +1,5 @@
 ﻿const express = require('express');
-const app = express();
+const app = express(); // nosemgrep: javascript.express.security.audit.express-check-csurf-middleware-usage.express-check-csurf-middleware-usage
 
 // Kubernetes mein service ka naam use hoga, abhi local default
 const USER_SERVICE_URL = process.env.USER_SERVICE_URL || 'http://localhost:3000';

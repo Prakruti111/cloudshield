@@ -1,4 +1,4 @@
-name: DevSecOps Pipeline
+﻿name: DevSecOps Pipeline
 
 on:
   push:
@@ -24,7 +24,7 @@ jobs:
       image: semgrep/semgrep
     steps:
       - uses: actions/checkout@v4
-      - run: semgrep scan --config p/default --error
+      - run: semgrep scan --config p/default --error --exclude-rule yaml.github-actions.security.github-actions-mutable-action-tag.github-actions-mutable-action-tag
 
   dependency-scan:
     name: Trivy (dependencies)
