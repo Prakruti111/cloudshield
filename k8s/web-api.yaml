@@ -1,0 +1,60 @@
+﻿apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: web-api
+  template:
+    metadata:
+      labels:
+        app: web-api
+    spec:
+      containers:
+        - name: web-api
+          image: cloudshield-web-api:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 4000
+          env:
+            - name: USER_SERVICE_URL
+              value: "http://user-service:3000"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 4000
+            initialDelaySeconds: 3
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 4000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-api
+spec:
+  selector:
+    app: web-api
+  ports:
+    - port: 4000
+      targetPort: 4000
