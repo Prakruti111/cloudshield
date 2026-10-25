@@ -1,0 +1,14 @@
+﻿services:
+  user-service:
+    build: ./services/user-service
+    ports:
+      - "3000:3000"
+
+  web-api:
+    build: ./services/web-api
+    ports:
+      - "4000:4000"
+    environment:
+      - USER_SERVICE_URL=http://user-service:3000
+    depends_on:
+      - user-service
