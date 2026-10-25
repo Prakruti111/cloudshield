@@ -41,7 +41,7 @@ jobs:
     needs: [secrets-scan, code-scan, dependency-scan]
     strategy:
       matrix:
-        service: [user-service, web-api]
+        service: [user-service, web-api, watcher]
     steps:
       - uses: actions/checkout@v4
       - name: Build image
